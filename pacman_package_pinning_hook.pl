@@ -12,7 +12,6 @@ sub semver_pattern($pattern, $current = undef) {
   return do {
     # pin to current major version -- unknown at this point
     if ($pattern eq 'major') {
-      # we must go deeper
       sub ($test) { $current->{major} == $test->{major} }
     # pin to current minor version -- unknown at this point
     } elsif ($pattern eq 'minor') {
@@ -24,9 +23,11 @@ sub semver_pattern($pattern, $current = undef) {
       my ($operator, $version) =
         $pattern =~ /([<~^=])\s*(\d+\.\d+(?:\.\d+)?)/;
 
+      die "Unable to parse as pattern/version: '$pattern'"
+        unless defined $operator && defined $version;
+
       die "Unable to parse version: '$version'"
-        unless
-          my $rule = parse_version($version);
+        unless my $rule = parse_version($version);
 
       {
         '=' => sub ($test) {
@@ -114,7 +115,7 @@ sub main() {
   die "Couldn't determine current version"
     unless defined $current;
 
-  ### check ${repo}.db to see the new version
+  # check ${repo}.db to see the new version
   # /var/lib/pacman/sync/{extra,core,...}.db
   # really a .tar.gz file
   # after extraction, directories like: ./linux-zen-6.7.6.zen1-1/desc
