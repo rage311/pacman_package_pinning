@@ -1,6 +1,6 @@
 Place the "package_pinning.hook" file in your pacman hooks directory:
 
-    `/etc/pacman.d/hooks/package_pinning.hook`
+    /etc/pacman.d/hooks/package_pinning.hook
 
 Edit the package_pinning.hook file lines:
 
