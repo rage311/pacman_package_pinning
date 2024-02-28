@@ -37,7 +37,7 @@ sub semver_pattern($pattern, $current = undef) {
         },
         # less than
         '<' => sub ($test) {
-          $test->{major} < $rule->{major}
+             $test->{major} < $rule->{major}
           || ($test->{major} == $rule->{major} && $test->{minor} < $rule->{minor})
           || (   $test->{major} == $rule->{major}
               && $test->{minor} == $rule->{minor}
@@ -138,7 +138,7 @@ sub main() {
   say "Update candidate: $new_version_str";
   say "Pin             : $pin";
 
-  # JustUnixThings
+  # #JustUnixThings
   if ($eligible) {
     # all good
     say "OK!\n";
