@@ -1,0 +1,12 @@
+# /etc/pacman.d/hooks/package_pinning.hook
+[Trigger]
+Operation = Upgrade
+Type = Package
+Target = linux-zen
+
+[Action]
+Description = Pin linux-zen kernel to specified X.Y.Z version
+When = PreTransaction
+Exec = /home/matt/bin/pacman_package_pinning_hook.pl --package "linux-zen" --repo "extra" --pin "minor"
+AbortOnFail = True
+Depends = perl
