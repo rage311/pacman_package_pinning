@@ -16,42 +16,39 @@ sub semver_pattern($pattern, $current = undef) {
       sub ($test) { $current->{major} == $test->{major} }
     # pin to current minor version -- unknown at this point
     } elsif ($pattern eq 'minor') {
-        sub ($test) {
-             $current->{major} == $test->{major}
-          && $current->{minor} == $test->{minor}
-        }
+      sub ($test) {
+           $current->{major} == $test->{major}
+        && $current->{minor} == $test->{minor}
+      }
     } else {
       my ($operator, $version) =
         $pattern =~ /([<~^=])\s*(\d+\.\d+(?:\.\d+)?)/;
 
-      my $rule = parse_version($version)
-        or die "Unable to parse version: '$version'";
+      die "Unable to parse version: '$version'"
+        unless
+          my $rule = parse_version($version);
 
       {
-        '='     =>,
-          sub ($test) {
-               $test->{major} == $rule->{major}
-            && $test->{minor} == $rule->{minor}
-            && $test->{patch} == $rule->{patch}
-          },
+        '=' => sub ($test) {
+             $test->{major} == $rule->{major}
+          && $test->{minor} == $rule->{minor}
+          && $test->{patch} == $rule->{patch}
+        },
         # less than
-        '<'     =>
-          sub ($test) {
-            $test->{major} < $rule->{major}
-            || ($test->{major} == $rule->{major} && $test->{minor} < $rule->{minor})
-            || (   $test->{major} == $rule->{major}
-                && $test->{minor} == $rule->{minor}
-                && $test->{patch} <  $rule->{patch}
-               )
-          },
+        '<' => sub ($test) {
+          $test->{major} < $rule->{major}
+          || ($test->{major} == $rule->{major} && $test->{minor} < $rule->{minor})
+          || (   $test->{major} == $rule->{major}
+              && $test->{minor} == $rule->{minor}
+              && $test->{patch} <  $rule->{patch}
+             )
+        },
         # can only differ in patch versions
-        '~'     =>
-          sub ($test) {
-            $test->{major} == $rule->{major} && $test->{minor} == $rule->{minor}
-          },
+        '~' => sub ($test) {
+          $test->{major} == $rule->{major} && $test->{minor} == $rule->{minor}
+        },
         # can only differ in minor and patch versions
-        '^'     =>
-          sub ($test) { $test->{major} == $rule->{major} },
+        '^' => sub ($test) { $test->{major} == $rule->{major} },
       }
       ->{$operator};
     }
@@ -66,7 +63,7 @@ sub parse_version($string) {
   return {
     major => $major,
     minor => $minor,
-    patch => $patch
+    patch => $patch,
   };
 }
 
@@ -122,15 +119,15 @@ sub main() {
   # really a .tar.gz file
   # after extraction, directories like: ./linux-zen-6.7.6.zen1-1/desc
   my $tar = Archive::Tar->new;
-  $tar->read("/var/lib/pacman/sync/${repo}.db", 1)
-    or die "$!";
+  die "Unable to read pacman ${repo}.db file:\n$!"
+    unless $tar->read("/var/lib/pacman/sync/${repo}.db", 1);
+
   my $target = first { /$package-\d+\.\d+(\.\d+)?/ } $tar->list_files();
 
   my $new = parse_version($target);
   die "No new 'major.minor.patch' pattern from regex in pacman db tar archive"
     unless defined $new;
 
-  chomp($pin);
   my $eligible = semver_pattern($pin, $current)->($new);
 
   my $current_version_str = deparse_version($current);
@@ -138,7 +135,7 @@ sub main() {
 
   say "Current         : $current_version_str";
   say "Update candidate: $new_version_str";
-  say "Pin:              $pin";
+  say "Pin             : $pin";
 
   # JustUnixThings
   if ($eligible) {
@@ -147,8 +144,7 @@ sub main() {
     exit 0;
   } else {
     say "Installing $package $new_version_str"
-      . " violates version pinning to $pin"
-      . "\n";
+      . " violates version pinning to $pin\n";
     exit 1;
   }
 }
